@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html class="h-full w-full" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Class 113 Website</title>
+    <style>
+      html {
+        font-family: Avenir, Helvetica, Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-align: center;
+        color: #2c3e50;
+        margin-top: 60px;
+      }
+    
+      canvas {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="h-full w-full">
+    <div class="flex flex-row items-center justify-center h-full w-full">
+      <div class="card w-96 bg-base-100 shadow-xl mr-6">
+        <figure><video class="textares" id="video">Video stream not available.</video></figure>
+        <div class="card-body">
+          <h2 class="card-title">Your Camera</h2>
+          <p class="justify-first">Take A Picture Anytime To Save For Later.</p>
+          <div class="card-actions justify-end">
+            <button class="btn btn-primary" id="takeSnap">Take photo</button>
+          </div>
+        </div>
+      </div>
+      <div class="card w-96 bg-base-100 shadow-xl">
+        <figure><img src="https://i1.wp.com/lanecdr.org/wp-content/uploads/2019/08/placeholder.png" class="h-72" id="snap"/></figure>
+        <div class="card-body">
+          <h2 class="card-title">Your Picture</h2>
+          <p class="justify-first">This Is The Picture You Took.</p>
+          <div class="card-actions justify-end">
+            <button class="btn btn-primary" id="downSnap">Download</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <canvas id="canvas"></canvas>
+    <script is:inline>
+      var width = 640;
+      var height = 0;
+      var streaming = false;
+      var video = null;
+      var canvas = null;
+      var photo = null;
+      var data = null;
+
+      function showViewLiveResultButton() {
+          if (window.self !== window.top) {
+          document.querySelector(".contentarea").remove();
+          const button = document.createElement("button");
+          button.textContent = "View live result of the example code above";
+          document.body.append(button);
+          button.addEventListener('click', () => window.open(location.href));
+          return true;
+          }
+          return false;
+      }
+      function startup() {
+          if (showViewLiveResultButton()) { return; }
+          video = document.getElementById('video');
+          canvas = document.getElementById('canvas');
+          photo = document.getElementById('snap');
+
+          navigator.mediaDevices.getUserMedia({video: true, audio: false})
+          .then(function(stream) {
+          video.srcObject = stream;
+          video.play();
+          })
+          .catch(function(err) {
+          console.log("An error occurred: " + err);
+          });
+          video.addEventListener('canplay', function(ev){
+          if (!streaming) {
+              height = video.videoHeight / (video.videoWidth/width);
+              if (isNaN(height)) {
+              height = width / (4/3);
+              }
+              video.setAttribute('width', width);
+              video.setAttribute('height', height);
+              canvas.setAttribute('width', width);
+              canvas.setAttribute('height', height);
+              streaming = true;
+          }
+          }, false);
+
+          document.getElementById('takeSnap').addEventListener('click', function(ev){
+          takepicture();
+          ev.preventDefault();
+          }, false);
+      }
+      function clearphoto() {
+          var context = canvas.getContext('2d');
+          context.fillStyle = "#AAA";
+          context.fillRect(0, 0, canvas.width, canvas.height);
+
+          data = canvas.toDataURL('image/png');
+          photo.setAttribute('src', data);
+      }
+      function takepicture() {
+          var context = canvas.getContext('2d');
+          if (width && height) {
+          canvas.width = width;
+          canvas.height = height;
+          context.drawImage(video, 0, 0, width, height);
+
+          data = canvas.toDataURL('image/png');
+          photo.setAttribute('src', data);
+          } else {
+          clearphoto();
+          }
+      }
+      window.addEventListener('load', startup, false);
+      document.getElementById('downSnap').addEventListener('click', function() {
+          const a = document.createElement("a");
+          a.href = data;
+          a.download = "Picture.png"
+          a.click();
+      });
+    </script>
+  </body>
+</html>
+
